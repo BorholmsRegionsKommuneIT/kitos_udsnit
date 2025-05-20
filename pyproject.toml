@@ -8,10 +8,8 @@ dependencies = [
     "flatten-json>=0.1.14",
     "ipykernel>=6.29.5",
     "pandas>=2.2.3",
-    "pyodbc>=5.2.0",
     "python-dotenv>=1.1.0",
     "requests>=2.32.3",
-    "sqlalchemy>=2.0.41",
 ]
 
 [tool.ruff]

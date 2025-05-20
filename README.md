@@ -1,5 +1,5 @@
 ## Hvorfor
-Kitos understøtter på nuværende tidspunkt 
+Kitos understøtter på nuværende tidspunkt ikke API drevet brugerstyring, så denne løsning viser et udsnit af data fra kitos som vi ikke har noget imod at vise til hele organisationen. 
 
 ## Topdesk:
 - krav: S2505-541
