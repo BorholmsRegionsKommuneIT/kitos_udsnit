@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="UTF-8">
+  <title>Internal Data Table</title>
+  <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">
+</head>
+
+<body>
+  <h1>Overblik over IT systemer i BRK</h1>
+  <table id="myTable" class="display"></table>
+
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+  <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+  <script>
+    // Define column name mappings for more user-friendly display
+    const columnDisplayNames = {
+      'new_system_name': 'System',
+      'description': 'Beskrivelse',
+      'leverandor': 'Leverandør',
+      'ansvarlig_organisationsenhed': 'Ansvarlig enhed',
+      'relevante_organisationsenheder': 'Relevant enhed',
+      'system_admins': 'System Administratorer',
+      'title_url_dict': 'Referencer'
+    }; fetch('data.json')
+      .then(response => response.json())
+      .then(data => {
+        $('#myTable').DataTable({
+          data: data,
+          language: {
+            search: "Søg:",
+            lengthMenu: "Vis _MENU_ rækker pr. side",
+            info: "Viser _START_ til _END_ af _TOTAL_ rækker",
+            infoEmpty: "Viser 0 til 0 af 0 rækker",
+            infoFiltered: "(filtreret fra _MAX_ rækker i alt)",
+            paginate: {
+              first: "Første",
+              previous: "Forrige",
+              next: "Næste",
+              last: "Sidste"
+            }
+          },
+          columns: Object.keys(data[0]).map(key => {
+            if (key === 'title_url_dict') {
+              return {
+                title: columnDisplayNames[key] || key,
+                data: key,
+                render: function (data, type, row) {
+                  if (type === 'display' && data) {
+                    try {
+                      const linkData = JSON.parse(data);
+                      const links = Object.entries(linkData).map(([title, url]) =>
+                        `<a href="${url}" target="_blank">${title}</a>`
+                      ).join(' | ');
+                      return links;
+                    } catch (e) {
+                      return data;
+                    }
+                  }
+                  return data;
+                }
+              };
+            } else {
+              return {
+                title: columnDisplayNames[key] || key,
+                data: key
+              };
+            }
+          }),
+          paging: false
+        });
+      });
+  </script>
+</body>
+
+</html>
