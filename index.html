@@ -9,6 +9,7 @@
 
 <body>
   <h1>Overblik over IT systemer i BRK</h1>
+  <p id="lastUpdated" style="font-style: italic; color: #666; margin-bottom: 20px;"></p>
   <table id="myTable" class="display"></table>
 
   <script src="jquery-3.6.0.min.js"></script>
@@ -22,10 +23,20 @@
       'ansvarlig_organisationsenhed': 'Ansvarlig enhed',
       'relevante_organisationsenheder': 'Relevant enhed',
       'system_admins': 'System Administratorer',
-      'title_url_dict': 'Referencer'
-    }; fetch('data.json')
-      .then(response => response.json())
-      .then(data => {
+      'title_url_dict': 'Referencer'    }; fetch('data.json')
+      .then(response => {
+        const lastModified = response.headers.get('Last-Modified');
+        const fetchTime = new Date();
+        return response.json().then(data => ({ data, lastModified, fetchTime }));
+      })      .then(({ data, lastModified, fetchTime }) => {
+        // Update timestamp display
+        if (lastModified) {
+          const modDate = new Date(lastModified);
+          document.getElementById('lastUpdated').textContent = `Sidst opdateret: ${modDate.toLocaleDateString('da-DK')}`;
+        }
+        else {
+          document.getElementById('lastUpdated').textContent = '';
+        }
         $('#myTable').DataTable({
           data: data,
           language: {

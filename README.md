@@ -1,5 +1,5 @@
-## Hvorfor
-Kitos understøtter på nuværende tidspunkt ikke API drevet brugerstyring, så denne løsning viser et udsnit af data fra kitos som vi ikke har noget imod at vise til hele organisationen. 
+## Hvorfor vise et overblik over systemer når Kitos gør det?
+Fordi man i digitalisering ikke ønsker at oprette alle i Kitos. Det ville være en administrativ byrde. 
 
 ## Topdesk:
 - krav: S2505-541
@@ -10,7 +10,7 @@ Kitos understøtter på nuværende tidspunkt ikke API drevet brugerstyring, så 
 [Kitos API docs](https://os2web.atlassian.net/wiki/spaces/KITOS/pages/658145384/S+dan+kommer+du+igang)
 
 
-## Filer 
+## Docs 
 `main.py` fetcher data fra Kitos API. Følgende felter bliver splejset sammen til 1 json fil.
 
 - IT System (navn)
@@ -20,5 +20,4 @@ Kitos understøtter på nuværende tidspunkt ikke API drevet brugerstyring, så 
 - System administrator
 - Referencer
 
-`index.html` viser data ved hjælp af [datatables.net](https://datatables.net/)
-
+`index.html` viser data ved hjælp af [datatables.net](https://datatables.net/) samt en fetch timestamp. 
