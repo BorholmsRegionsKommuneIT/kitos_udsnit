@@ -18,7 +18,7 @@ load_dotenv()
 PAM_PATH = Path(os.getenv("PAM_PATH"))
 uuid_kommune = os.getenv("kommune_uuid")
 
-with open(Path(f"{PAM_PATH}/kitos/kitos.json"), "r") as file:
+with open(Path(f"{PAM_PATH}"), "r") as file:
     cred = json.load(file)
 
 email = cred["kitos"].get("username")
