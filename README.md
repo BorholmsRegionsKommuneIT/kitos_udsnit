@@ -21,3 +21,8 @@ Fordi man i digitalisering ikke ønsker at oprette alle i Kitos. Det ville være
 - Referencer
 
 `index.html` viser data ved hjælp af [datatables.net](https://datatables.net/) samt en fetch timestamp. 
+
+
+## Run locally 
+`uv run -m http.server 8000`
+
