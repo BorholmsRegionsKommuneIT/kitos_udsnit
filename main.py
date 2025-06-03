@@ -1,5 +1,6 @@
 import collections.abc
 import json
+import logging
 import os
 from pathlib import Path
 
@@ -8,31 +9,65 @@ import requests
 from dotenv import load_dotenv
 from flatten_json import flatten
 
+from logger_config import setup_logging
+
+# Setup logging
+setup_logging()
+logger = logging.getLogger(__name__)
+
+logger.info("Starting script to fetch IT system data from Kitos API")
+
+# ----------------------------- Pandas settings ----------------------------- #
+
 pd.set_option("display.max_columns", None)
 pd.set_option("display.max_rows", 100)
 pd.set_option("display.expand_frame_repr", False)
 
 
 # ------------------------------ read .env file ------------------------------ #
-load_dotenv()
-PAM_PATH = Path(os.getenv("PAM_PATH"))
-uuid_kommune = os.getenv("kommune_uuid")
+try:
+    load_dotenv()
+    PAM_PATH = Path(os.getenv("PAM_PATH"))
+    uuid_kommune = os.getenv("kommune_uuid")
 
-with open(Path(f"{PAM_PATH}"), "r") as file:
-    cred = json.load(file)
+    if not PAM_PATH or not uuid_kommune:
+        raise ValueError("Missing required environment variables: PAM_PATH or kommune_uuid")
 
-email = cred["kitos"].get("username")
-password = cred["kitos"].get("password")
+    with open(Path(f"{PAM_PATH}"), "r") as file:
+        cred = json.load(file)
+
+    email = cred["kitos"].get("username")
+    password = cred["kitos"].get("password")
+
+    if not email or not password:
+        raise ValueError("Missing username or password in credentials file")
+
+except FileNotFoundError:
+    logger.error(f"Credentials file not found at {PAM_PATH}")
+    raise
+except KeyError as e:
+    logger.error(f"Missing key in credentials file: {e}")
+    raise
+except Exception as e:
+    logger.error(f"Error loading credentials: {e}")
+    raise
 
 # --------------------------------- Get token -------------------------------- #
-url_authorize = "https://kitos.dk/api/authorize/gettoken/"
-payload = {"email": email, "password": password}
-resp = requests.post(url_authorize, json=payload)
+try:
+    url_authorize = "https://kitos.dk/api/authorize/gettoken/"
+    payload = {"email": email, "password": password}
+    resp = requests.post(url_authorize, json=payload)
 
-# Get token
-resp.raise_for_status()
-data = resp.json()
-token = data["response"]["token"]
+    # Get token
+    resp.raise_for_status()
+    data = resp.json()
+    token = data["response"]["token"]
+except requests.RequestException as e:
+    logger.error(f"Failed to get authentication token: {e}")
+    raise
+except KeyError as e:
+    logger.error(f"Unexpected response format when getting token: {e}")
+    raise
 
 # --------------------------------- Base url --------------------------------- #
 base_url = "https://kitos.dk/api/v2"
@@ -48,29 +83,37 @@ def get_data_from_kitos_api(endpoint, params=None):
     has_more_data = True
     all_data = []
 
-    while has_more_data:
-        # Construct URL for current page
-        url = f"{base_url}{endpoint}?page={page}&pageSize={page_size}"
-        if params:
-            url += "&" + "&".join([f"{key}={value}" for key, value in params.items()])
+    try:
+        while has_more_data:
+            # Construct URL for current page
+            url = f"{base_url}{endpoint}?page={page}&pageSize={page_size}"
+            if params:
+                url += "&" + "&".join([f"{key}={value}" for key, value in params.items()])
 
-        # Make the request
-        response = requests.get(url, headers={"Authorization": f"Bearer {token}"})
-        response.raise_for_status()
+            # Make the request
+            response = requests.get(url, headers={"Authorization": f"Bearer {token}"})
+            response.raise_for_status()
 
-        # Get the current page of data
-        current_page_data = response.json()
+            # Get the current page of data
+            current_page_data = response.json()
 
-        # If we received data, add it to our collection
-        if current_page_data and len(current_page_data) > 0:
-            all_data.extend(current_page_data)
-            # Move to the next page
-            page += 1
-        else:
-            # No more data, exit the loop
-            has_more_data = False
+            # If we received data, add it to our collection
+            if current_page_data and len(current_page_data) > 0:
+                all_data.extend(current_page_data)
+                # Move to the next page
+                page += 1
+            else:
+                # No more data, exit the loop
+                has_more_data = False
 
-    return all_data
+        return all_data
+
+    except requests.RequestException as e:
+        logger.error(f"Failed to fetch data from {endpoint}: {e}")
+        raise
+    except Exception as e:
+        logger.error(f"Unexpected error while fetching data from {endpoint}: {e}")
+        raise
 
 
 def get_system_administrators(roles_data):
@@ -148,7 +191,6 @@ def get_external_references_dict(external_references):
 endpoint = "/it-systems"
 params = {"organizationUuid": uuid_kommune}
 all_it_systems = get_data_from_kitos_api(endpoint, params)
-
 
 df_all_it_systems = pd.DataFrame(all_it_systems)
 
@@ -259,7 +301,6 @@ endpoint = "/it-contracts"
 params = {"organizationUuid": uuid_kommune}
 all_it_contracts = get_data_from_kitos_api(endpoint, params)
 
-
 # Inspect it_systems
 df_all_it_contracts = pd.DataFrame(all_it_contracts)
 df_all_it_contracts = df_all_it_contracts[["uuid", "supplier", "systemUsages"]].copy()
@@ -338,5 +379,10 @@ final = prefinal
 
 PATH_TO_WEBSERVER = Path(os.getenv("PATH_TO_WEBSERVER"))
 
-final.to_json(PATH_TO_WEBSERVER, orient="records", force_ascii=False)
+try:
+    final.to_json(PATH_TO_WEBSERVER, orient="records", force_ascii=False)
+except Exception as e:
+    logger.error(f"Failed to save data to {PATH_TO_WEBSERVER}: {e}")
+    raise
 
+logger.info("Finished script to fetch IT system data from Kitos API")

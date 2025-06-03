@@ -13,4 +13,5 @@ venv
 env
 
 *.json
+*.log
 test_save_to_iis.py
