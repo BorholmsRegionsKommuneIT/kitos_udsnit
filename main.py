@@ -336,6 +336,6 @@ prefinal["title_url_dict"] = prefinal["title_url_dict"].apply(lambda x: json.dum
 
 final = prefinal
 
+PATH_TO_WEBSERVER = Path(os.getenv("PATH_TO_WEBSERVER"))
 
-# dump final to as data.json
-final.to_json("path_to_webserver", orient="records", force_ascii=False)
+final.to_json(PATH_TO_WEBSERVER, orient="records", force_ascii=False)
