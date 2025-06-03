@@ -24,7 +24,10 @@
       'relevante_organisationsenheder': 'Relevant enhed',
       'system_admins': 'System Administratorer',
       'title_url_dict': 'Referencer'
-    }; fetch('data.json')
+    };
+    // Add cache-busting query parameter to always fetch the latest data.json
+    const dataUrl = 'data.json?_=' + new Date().getTime();
+    fetch(dataUrl)
       .then(response => {
         const lastModified = response.headers.get('Last-Modified');
         const fetchTime = new Date();
@@ -34,9 +37,9 @@
         if (lastModified) {
           const modDate = new Date(lastModified);
           document.getElementById('lastUpdated').textContent = `Sidst opdateret: ${modDate.toLocaleDateString('da-DK')} ${modDate.toLocaleTimeString('da-DK', { hour: '2-digit', minute: '2-digit' })}`;
-        }
-        else {
-          document.getElementById('lastUpdated').textContent = '';
+        } else {
+          // Use fetchTime if Last-Modified is not available
+          document.getElementById('lastUpdated').textContent = `Sidst opdateret: ${fetchTime.toLocaleDateString('da-DK')} ${fetchTime.toLocaleTimeString('da-DK', { hour: '2-digit', minute: '2-digit' })}`;
         }
         $('#myTable').DataTable({
           data: data,
